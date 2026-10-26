@@ -168,9 +168,6 @@ nav button[aria-current="page"]{color:var(--ink);font-weight:700}
   <p class="sub" style="margin-top:8px">다 채운 것만 체크하면 결제 화면의 추천 카드가 알아서 바뀌어요. 다음 달 1일에 자동으로 비워져요.</p>
   <h2>매달 챙길 것</h2>
   <div class="panel" id="routine"></div>
-  <h2>처음 한 번만 설정</h2>
-  <p class="sub" id="todoCount"></p>
-  <div class="panel" id="todos"></div>
 
   <h2>백업</h2>
   <div class="backup">
@@ -191,7 +188,7 @@ nav button[aria-current="page"]{color:var(--ink);font-weight:700}
   <div id="boxes"></div>
   <h2>결제처 전체 목록</h2>
   <div class="panel" id="guide"></div>
-  <p class="ver">혜택 기준일 2026-10-26 · 카드사 공지가 바뀌면 Claude에게 수정 요청</p>
+  <p class="ver">혜택 기준일 2026-10-27 · 카드사 공지가 바뀌면 Claude에게 수정 요청</p>
 </section>
 
 </div>
@@ -203,7 +200,7 @@ nav button[aria-current="page"]{color:var(--ink);font-weight:700}
 </div></nav>
 
 <script>
-const APP_VERSION="2026-10-26b";
+const APP_VERSION="2026-10-27a";
 const CARD={
   mg:{n:"MG+ S",issuer:"하나카드 · 새마을금고",short:"MG+ S"},
   ss:{n:"SFC iD ON",issuer:"삼성카드 · 복지카드",short:"삼성"},
@@ -224,26 +221,16 @@ const MONTHLY=[
   {k:"hdNpay",t:"현대 N Pay+ 20만원 다 채움",sub:"이후 네이버 결제는 1% 적립",card:"hd"},
   {k:"ssPerf",t:"삼성 실적 30만원 달성",sub:"할인받은 금액, 버스·택시 빼고",card:"ss"},
   {k:"mgPerf",t:"MG+ S 실적 30만원 달성",sub:"관리비 빼고",card:"mg"},
-  {k:"hdPerf",t:"현대 실적 30만원 달성",sub:"무이자할부 빼고",card:"hd"},
-  {k:"welfare",t:"복지금 이번 달 사용분 다 씀",sub:"기한 확인",card:"ss"}
+  {k:"hdPerf",t:"현대 실적 30만원 달성",sub:"무이자할부 빼고",card:"hd"}
 ];
 const ROUTINE=[
   ["중순","하나카드 앱에서 MG+ S 한도 확인 후 체크"],
   ["20일쯤","세 카드 앱에서 실적 확인 후 체크. 모자란 카드에 남은 결제를 몰기"],
-  ["수시","복지금 사용 기한 확인. 생필품·병원비로 소진"]
-];
-const TODOS=[
-  ["toss","토스페이 기본 카드를 MG+ S로"],
-  ["baemin","배민 앱에 삼성카드 직접 등록"],
-  ["npay","네이버페이 기본 카드를 현대로"],
-  ["nplus","네이버플러스 멤버십을 쓴다면 결제 카드를 현대로"],
-  ["apple","애플 ID·네이버페이의 애플 결제에서 카드 빼고 기프트카드로"],
-  ["welfare","회사 복지 사이트에서 복지금 기한·업종 확인"],
-  ["prime","토스프라임 혜택이 월 5,900원보다 적으면 해지"]
+  ["연간","복지금은 1년 단위. 연말 전에 남은 금액 확인하고 생필품·병원비로 다 쓰기"]
 ];
 const BOXES=[
   {k:"ss",v:"월 약 1.8~2.4만원",dl:[["배달 30%","월 1만원 (배민 약 3.3만원)"],["통신·교통 10%","실적 30만↑ 1만원, 60만↑ 2만원"],["간편결제 3%","쿠페이·네이버페이·카카오페이 등. 30만↑ 5천원, 60만↑ 1만원"],["한도 넘으면","간편결제 1%"]],
-   li:["할인받은 금액, 버스·택시는 실적에서 빠져요","배달 30%는 커피·배달·델리 중 가장 많이 쓴 영역 하나만","토스페이는 3% 대상이 아니에요","연회비 없음, 복지금은 꼭 써야 해요"]},
+   li:["할인받은 금액, 버스·택시는 실적에서 빠져요","배달 30%는 커피·배달·델리 중 가장 많이 쓴 영역 하나만","토스페이는 3% 대상이 아니에요","연회비 없음, 복지금(1년 단위)은 연말 전에 다 써요"]},
   {k:"mg",v:"월 1.5~3만원",dl:[["간편결제 10%","토스페이·네이버페이·카카오페이 등, 건당 1만원↑"],["구독 50%","넷플릭스·유튜브·쿠팡와우 등 월 정기결제"],["통합 한도","실적 30만↑ 1.5만원, 60만↑ 3만원"]],
    li:["한도를 구독 50%와 같이 써요. 배민은 삼성 30%를 먼저 채우고 써요","관리비는 실적에서 빠져요","확인: 하나카드 앱 → 이달의 혜택"]},
   {k:"hd",v:"월 약 1~1.5만원",dl:[["N Pay+ 5%","월 20만원 결제분까지, 최대 1만P"],["그 외","1% 적립, 한도 없음"],["멤버십","네이버플러스 무료 (정기결제 등록 시)"]],
@@ -377,15 +364,6 @@ function renderMonth(){
   document.getElementById("mCount").textContent=MONTHLY.length+"개 중 "+done+"개 완료";
   const r=document.getElementById("routine");r.textContent="";
   ROUTINE.forEach(([w,t])=>{const d=el("div","when");d.append(el("b",null,w));d.append(el("span",null,t));r.append(d);});
-  const tb=document.getElementById("todos");tb.textContent="";let td=0;
-  TODOS.forEach(([k,t])=>{
-    const on=!!st.todos[k];if(on)td++;
-    const lab=el("label","todo"+(on?" done":""));
-    const cb=document.createElement("input");cb.type="checkbox";cb.checked=on;cb.id="t-"+k;
-    cb.onchange=()=>{st.todos[k]=cb.checked;save();renderMonth();};
-    lab.append(cb);lab.append(el("span","t",t));tb.append(lab);
-  });
-  document.getElementById("todoCount").textContent=TODOS.length+"개 중 "+td+"개 완료";
 }
 
 /* ---------- render: cards ---------- */

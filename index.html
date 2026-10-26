@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>준의 카드 지갑</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="카드지갑">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E7EBF0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F151C" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#E7EBF0; --surface:#FFFFFF; --ink:#16202B; --muted:#5E6B78; --line:#D3DAE1;
+  --mg:#6A4FD3; --ss:#1C4ED8; --hd:#2E3238; --mom:#B8742A; --gift:#3E8E7E; --onhd:#FFFFFF;
+  --ok:#2F7D5B; --stop:#B4532A;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F151C; --surface:#18202A; --ink:#E7ECF1; --muted:#9AA7B4; --line:#2B3540;
+    --mg:#9D86F2; --ss:#6C93F5; --hd:#B9BEC6; --mom:#E0A35A; --gift:#6CC3AF; --onhd:#10161D;
+    --ok:#6FCB9C; --stop:#F0936A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F151C; --surface:#18202A; --ink:#E7ECF1; --muted:#9AA7B4; --line:#2B3540;
+  --mg:#9D86F2; --ss:#6C93F5; --hd:#B9BEC6; --mom:#E0A35A; --gift:#6CC3AF; --onhd:#10161D;
+  --ok:#6FCB9C; --stop:#F0936A;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));
+  -webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.wrap{max-width:520px;margin:0 auto;padding-block:14px 24px;
+  padding-left:max(18px, env(safe-area-inset-left,0px));padding-right:max(18px, env(safe-area-inset-right,0px))}
+h1{font-size:23px;font-weight:700;margin:6px 0 2px;letter-spacing:-.01em}
+h2{font-size:17px;font-weight:700;margin:28px 0 10px}
+p{margin:0}
+.sub{color:var(--muted);font-size:13.5px}
+.panel{background:var(--surface);border-radius:14px;padding:4px 16px;margin-top:12px}
+.view{display:none}.view.on{display:block}
+button{font-family:inherit;touch-action:manipulation}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ss);outline-offset:3px}
+
+/* ---- physical cards ---- */
+.cc{position:relative;isolation:isolate;aspect-ratio:1.586/1;max-width:100%;border-radius:16px;padding:16px 18px;color:#fff;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:space-between;text-align:left;border:0;width:100%;
+  box-shadow:0 14px 28px -16px rgba(10,20,40,.55),inset 0 1px 0 rgba(255,255,255,.18)}
+.cc::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 100% 0%,rgba(255,255,255,.22),transparent 55%),
+             radial-gradient(90% 70% at 0% 110%,rgba(0,0,0,.25),transparent 60%)}
+.cc>*{position:relative;z-index:1}
+.cc .issuer{font-size:13px;font-weight:500;opacity:.9}
+.cc .head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.cc .ic{width:40px;height:30px;border-radius:7px;background:linear-gradient(135deg,#F0DFAE,#B89656);position:relative;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.cc .ic::before{content:"";position:absolute;inset:7px 0;border-top:1px solid rgba(0,0,0,.25);border-bottom:1px solid rgba(0,0,0,.25)}
+.cc .ic::after{content:"";position:absolute;inset:0 15px;border-left:1px solid rgba(0,0,0,.25);border-right:1px solid rgba(0,0,0,.25)}
+.cc .name{font-size:26px;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.cc .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.cc .pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.2);white-space:nowrap}
+.cc .pill.full{background:rgba(0,0,0,.35)}
+.cc.mg{background:linear-gradient(135deg,#8467EE 0%,#5233C0 60%,#3B2290 100%)}
+.cc.ss{background:linear-gradient(135deg,#3B6FF5 0%,#1A44C9 60%,#0F2A86 100%)}
+.cc.hd{background:linear-gradient(135deg,#4A4F57 0%,#24272C 60%,#121417 100%)}
+.cc.mom{background:linear-gradient(135deg,#E3A24C 0%,#B26B22 60%,#86501A 100%)}
+.cc.gift{background:linear-gradient(135deg,#5DBDA8 0%,#2E8270 60%,#1F5E51 100%)}
+
+.wallet{position:relative;margin-top:16px}
+.wallet .cc{cursor:pointer;transition:transform .25s ease;margin-bottom:calc(58px - 63.05%)}
+.wallet .cc:last-child{margin-bottom:0}
+.wallet .cc:active{transform:translateY(-4px)}
+.wallet .cc .name{font-size:22px}
+
+.ask{font-size:17px;font-weight:700;margin:22px 0 10px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 8px;font-size:14.5px;font-weight:500;color:var(--ink);cursor:pointer;min-height:58px;line-height:1.3}
+.tile[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+
+.result{margin-top:14px}
+.result .cc .name{font-size:30px}
+.answer{background:var(--surface);border-radius:14px;padding:16px;margin-top:12px}
+.answer .head{font-size:19px;font-weight:700}
+.answer .reason{margin-top:4px}
+.answer .note{margin-top:8px;font-size:13.5px;color:var(--muted)}
+.answer.stop{border-left:5px solid var(--stop)}
+.back{font:inherit;font-size:14px;background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 16px;margin-top:12px;cursor:pointer}
+
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:4px 10px 4px 8px;border-radius:999px;color:#fff;white-space:nowrap}
+.chip::before{content:"";width:13px;height:9px;border-radius:2px;background:rgba(255,255,255,.55)}
+.c-mg{background:var(--mg)}.c-ss{background:var(--ss)}.c-hd{background:var(--hd);color:var(--onhd)}.c-mom{background:var(--mom)}.c-gift{background:var(--gift)}
+.c-hd::before{background:currentColor;opacity:.45}
+.item{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .grow{flex:1;min-width:0}
+.item .what{font-weight:500}
+.item .why{font-size:13px;color:var(--muted)}
+
+.box{background:var(--surface);border-radius:16px;padding:14px;margin-top:14px}
+.box .cc{max-width:300px}
+.box dl{margin:14px 2px 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px}
+.box dt{color:var(--muted)}
+.box dd{margin:0}
+.box ul{margin:10px 0 2px;padding-left:20px;font-size:14px}
+.box li{margin:4px 0}
+.box .val{font-weight:700;margin:12px 2px 0}
+
+.todo{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--line);cursor:pointer}
+.todo:first-child{border-top:0}
+.todo input{width:22px;height:22px;margin:1px 0 0;flex:none;accent-color:var(--ok)}
+.todo .grow{flex:1;min-width:0}
+.todo .meta{font-size:13px;color:var(--muted);margin:0}
+.todo .chip{margin-left:auto;flex:none}
+.todo.done .t{color:var(--muted);text-decoration:line-through}
+.mhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.reset{font:inherit;font-size:13px;background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.reset.arm{background:var(--stop);border-color:var(--stop);color:var(--surface)}
+.when{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+.when:first-child{border-top:0}
+.when b{flex:none;width:58px}
+.btn{display:block;width:100%;font:inherit;font-size:14px;padding:11px;border-radius:12px;background:transparent;color:var(--ink);border:1px solid var(--line);margin-top:10px;cursor:pointer}
+.btn.pri{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.backup{background:var(--surface);border-radius:14px;padding:14px 16px;margin-top:12px}
+.backup textarea{width:100%;font:13px ui-monospace,Menlo,monospace;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;min-height:76px;margin-top:10px;resize:vertical}
+.msg{font-size:13px;color:var(--muted);margin-top:8px;min-height:1.2em}
+.msg.bad{color:var(--stop)}
+.ver{font-size:12.5px;color:var(--muted);margin-top:16px;text-align:center}
+
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);z-index:20;
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+nav .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+nav button{font-size:13.5px;background:none;border:0;color:var(--muted);padding:13px 0 12px;cursor:pointer}
+nav button[aria-current="page"]{color:var(--ink);font-weight:700}
+@media (prefers-reduced-motion: reduce){.wallet .cc{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section id="pay" class="view on" aria-label="결제">
+  <div id="top">
+    <h1>뭘로 결제할까</h1>
+    <p class="sub" id="topSub"></p>
+    <div class="wallet" id="wallet" aria-label="내 카드"></div>
+  </div>
+  <div class="result" id="result" hidden></div>
+  <p class="ask">어디서 결제해요?</p>
+  <div class="tiles" id="tiles"></div>
+</section>
+
+<section id="month" class="view" aria-label="이번 달">
+  <div class="mhead"><h1 id="mTitle">이번 달 체크</h1><button class="reset" id="resetBtn" type="button">초기화</button></div>
+  <p class="sub" id="mCount"></p>
+  <div class="panel" id="mchecks"></div>
+  <p class="sub" style="margin-top:8px">다 채운 것만 체크하면 결제 화면의 추천 카드가 알아서 바뀌어요. 다음 달 1일에 자동으로 비워져요.</p>
+  <h2>매달 챙길 것</h2>
+  <div class="panel" id="routine"></div>
+  <h2>처음 한 번만 설정</h2>
+  <p class="sub" id="todoCount"></p>
+  <div class="panel" id="todos"></div>
+
+  <h2>백업</h2>
+  <div class="backup">
+    <p class="sub">체크 상태는 이 폰에만 저장돼요. 앱을 지우거나 폰을 바꾸기 전에 백업 코드를 복사해 메모 앱에 붙여두세요.</p>
+    <button class="btn pri" id="copyBtn" type="button">백업 코드 복사</button>
+    <textarea id="code" aria-label="백업 코드" placeholder="복원할 때는 여기에 백업 코드를 붙여넣고 아래 버튼을 누르세요" spellcheck="false" autocomplete="off"></textarea>
+    <button class="btn" id="restoreBtn" type="button">붙여넣은 코드로 복원</button>
+    <p class="msg" id="bmsg" role="status"></p>
+  </div>
+
+  <button class="btn" id="themeBtn" type="button" style="margin-top:22px">화면 밝기: 자동</button>
+  <p class="ver" id="ver"></p>
+</section>
+
+<section id="cards" class="view" aria-label="카드">
+  <h1>카드별 혜택</h1>
+  <p class="sub">실적 목표는 세 카드 모두 전월 30만원. 혜택 합계 월 약 4.5~6만원</p>
+  <div id="boxes"></div>
+  <h2>결제처 전체 목록</h2>
+  <div class="panel" id="guide"></div>
+  <p class="ver">혜택 기준일 2026-10-26 · 카드사 공지가 바뀌면 Claude에게 수정 요청</p>
+</section>
+
+</div>
+
+<nav aria-label="메뉴"><div class="in">
+  <button data-v="pay" aria-current="page" type="button">결제</button>
+  <button data-v="month" type="button">이번 달</button>
+  <button data-v="cards" type="button">카드</button>
+</div></nav>
+
+<script>
+const APP_VERSION="2026-10-26a";
+const CARD={
+  mg:{n:"MG+ S",issuer:"하나카드 · 새마을금고",short:"MG+ S"},
+  ss:{n:"SFC iD ON",issuer:"삼성카드 · 복지카드",short:"삼성"},
+  hd:{n:"NAVER",issuer:"현대카드",short:"현대"},
+  mom:{n:"엄마카드",issuer:"오프라인 전용",short:"엄마카드"},
+  gift:{n:"기프트카드",issuer:"앱스토어 충전식",short:"기프트카드"}
+};
+const TILES=[
+  ["baemin","배민"],["coupang","쿠팡"],["naver","네이버 쇼핑"],
+  ["offline","오프라인·주유"],["easypay","카카오·네이버페이"],["sub","구독"],
+  ["phone","휴대폰 요금"],["bill","관리비"],["game","게임·앱"],
+  ["install","큰 할부"],["welfare","복지금 업종"],["etc","그 외 결제"]
+];
+const MONTHLY=[
+  {k:"mgLimit",t:"MG+ S 할인 한도 다 참",sub:"하나카드 앱 → 이달의 혜택",card:"mg"},
+  {k:"ssBaemin",t:"삼성 배달 30% 1만원 다 받음",sub:"배민 약 3.3만원 결제",card:"ss"},
+  {k:"ssPay",t:"삼성 간편결제 3% 한도 다 참",sub:"삼성카드 앱 → 이번달 받은 혜택",card:"ss"},
+  {k:"hdNpay",t:"현대 N Pay+ 20만원 다 채움",sub:"이후 네이버 결제는 1% 적립",card:"hd"},
+  {k:"ssPerf",t:"삼성 실적 30만원 달성",sub:"할인받은 금액, 버스·택시 빼고",card:"ss"},
+  {k:"mgPerf",t:"MG+ S 실적 30만원 달성",sub:"관리비 빼고",card:"mg"},
+  {k:"hdPerf",t:"현대 실적 30만원 달성",sub:"무이자할부 빼고",card:"hd"},
+  {k:"welfare",t:"복지금 이번 달 사용분 다 씀",sub:"기한 확인",card:"ss"}
+];
+const ROUTINE=[
+  ["중순","하나카드 앱에서 MG+ S 한도 확인 후 체크"],
+  ["20일쯤","세 카드 앱에서 실적 확인 후 체크. 모자란 카드에 남은 결제를 몰기"],
+  ["수시","복지금 사용 기한 확인. 생필품·병원비로 소진"]
+];
+const TODOS=[
+  ["toss","토스페이 기본 카드를 MG+ S로"],
+  ["baemin","배민 앱에 삼성카드 직접 등록"],
+  ["npay","네이버페이 기본 카드를 현대로"],
+  ["nplus","네이버플러스 멤버십을 쓴다면 결제 카드를 현대로"],
+  ["apple","애플 ID·네이버페이의 애플 결제에서 카드 빼고 기프트카드로"],
+  ["welfare","회사 복지 사이트에서 복지금 기한·업종 확인"],
+  ["prime","토스프라임 혜택이 월 5,900원보다 적으면 해지"]
+];
+const BOXES=[
+  {k:"ss",v:"월 약 1.8~2.4만원",dl:[["배달 30%","월 1만원 (배민 약 3.3만원)"],["통신·교통 10%","실적 30만↑ 1만원, 60만↑ 2만원"],["간편결제 3%","쿠페이·네이버페이·카카오페이 등. 30만↑ 5천원, 60만↑ 1만원"],["한도 넘으면","간편결제 1%"]],
+   li:["할인받은 금액, 버스·택시는 실적에서 빠져요","배달 30%는 커피·배달·델리 중 가장 많이 쓴 영역 하나만","토스페이는 3% 대상이 아니에요","연회비 없음, 복지금은 꼭 써야 해요"]},
+  {k:"mg",v:"월 1.5~3만원",dl:[["간편결제 10%","토스페이·네이버페이·카카오페이 등, 건당 1만원↑"],["구독 50%","넷플릭스·유튜브·쿠팡와우 등 월 정기결제"],["통합 한도","실적 30만↑ 1.5만원, 60만↑ 3만원"]],
+   li:["한도가 배민만으로도 매달 중순 전에 차요","관리비는 실적에서 빠져요","확인: 하나카드 앱 → 이달의 혜택"]},
+  {k:"hd",v:"월 약 1~1.5만원",dl:[["N Pay+ 5%","월 20만원 결제분까지, 최대 1만P"],["그 외","1% 적립, 한도 없음"],["멤버십","네이버플러스 무료 (정기결제 등록 시)"]],
+   li:["무이자할부는 실적에서 빠져요","포인트는 다음 달 15일 적립"]}
+];
+const GUIDE=[
+  ["복지금 쓸 수 있는 업종","ss","복지금부터 먼저 다 써요"],
+  ["배민","mg","토스페이 10% → 한도 차면 삼성 직접 결제 30%"],
+  ["네이버 쇼핑","hd","N Pay+ 5% (월 20만원까지)"],
+  ["네이버플러스 멤버십","hd","정기결제하면 무료"],
+  ["쿠팡, 쿠팡와우","ss","쿠페이 3%"],
+  ["카카오·네이버페이 온라인","mg","1만원 이상 10%, 한도 차면 삼성 3%"],
+  ["구독 (넷플릭스·유튜브 등)","mg","50%, 한도 차면 삼성 10%"],
+  ["휴대폰 요금","ss","10%"],
+  ["큰 금액 무이자 할부","ss","승인한 달 실적에 전액"],
+  ["커피","ss","배달보다 많이 쓴 달만 30%"],
+  ["관리비","mg","혜택·실적 없음, 그대로"],
+  ["주유, 오프라인","mom","지금처럼"],
+  ["게임·앱","gift","월 10만원 안에서만"],
+  ["그 외 애매한 결제","mg","기본은 MG+ S. 20일쯤 실적 못 채운 카드가 있으면 그쪽으로"]
+];
+
+/* ---------- state (이 폰에만 저장) ---------- */
+const KEY="jun-cards-v1";
+const curKey=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");};
+const blank=()=>({todos:{},theme:"auto",month:{key:"",checks:{}}});
+function normalize(o){
+  const s=Object.assign(blank(),o&&typeof o==="object"?o:{});
+  if(!s.month||typeof s.month!=="object")s.month={key:"",checks:{}};
+  if(!s.month.checks||typeof s.month.checks!=="object")s.month.checks={};
+  if(!s.todos||typeof s.todos!=="object")s.todos={};
+  if(!["auto","light","dark"].includes(s.theme))s.theme="auto";
+  return s;
+}
+let st=blank();
+try{const s=localStorage.getItem(KEY);if(s)st=normalize(JSON.parse(s));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+function rollover(){if(st.month.key!==curKey()){st.month={key:curKey(),checks:{}};save();}}
+
+/* ---------- helpers ---------- */
+const C=()=>(st.month&&st.month.checks)||{};
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+function chip(k){return el("span","chip c-"+k,CARD[k].short);}
+function status(k){
+  const c=C();
+  if(k==="mg") return c.mgLimit?["한도 다 참",1]:["10% 한도 남음",0];
+  if(k==="ss") return c.ssBaemin?["배달 30% 받음",1]:["배달 30% 남음",0];
+  if(k==="hd") return c.hdNpay?["5% 한도 다 참",1]:["N Pay+ 5% 남음",0];
+  return null;
+}
+function cardEl(k,tag){
+  const d=el(tag||"div","cc "+k);
+  const head=el("div","head");head.append(el("span","name",CARD[k].n));
+  const s=status(k);if(s){head.append(el("span","pill"+(s[1]?" full":""),s[0]));}
+  d.append(head);
+  const foot=el("div","foot");foot.append(el("span","ic"));foot.append(el("span","issuer",CARD[k].issuer));
+  d.append(foot);return d;
+}
+
+/* ---------- decision (원본 카드 지갑과 동일) ---------- */
+function decide(k){
+  const c=C();
+  switch(k){
+  case "baemin":
+    if(!c.mgLimit) return {card:"mg",head:"MG+ S로, 토스페이 결제",reason:"1만원 이상 주문이면 10% 할인이에요.",note:"한도가 차면 ‘이번 달’에서 체크해 두세요. 그다음부터는 삼성이 떠요."};
+    if(!c.ssBaemin) return {card:"ss",head:"삼성카드로, 배민 앱에 직접 등록",reason:"약 3.3만원 결제분까지 30%, 최대 1만원이에요.",note:"토스페이를 거치면 할인에서 빠질 수 있어요."};
+    return {card:"ss",stop:1,head:"이번 달 배민 할인은 끝났어요",reason:"MG+ S와 삼성 할인을 모두 받았어요. 더 시키면 할인 없이 나가요.",note:"꼭 시킨다면 삼성으로 결제해 실적이라도 쌓아요."};
+  case "coupang":
+    return {card:"ss",head:"삼성카드로, 쿠페이 결제",reason:c.ssPay?"이번 달 3% 한도는 찼어요. 지금부터 1% 할인이에요.":"쿠페이 결제 3% 할인이에요.",note:"MG+ S는 쿠페이 할인 대상이 아니에요."};
+  case "naver":
+    if(!c.hdNpay) return {card:"hd",head:"현대카드로, 네이버페이 결제",reason:"N Pay+ 표시 상품은 5% 적립, 월 20만원 결제분까지예요.",note:"N Pay+ 표시가 없는 상품은 1% 적립이에요."};
+    if(!c.mgLimit) return {card:"mg",head:"MG+ S로, 네이버페이 결제",reason:"현대 5% 한도가 찼어요. MG+ S로 내면 1만원 이상 10% 할인이에요.",note:"MG 한도가 남아 있을 때만이에요."};
+    if(!c.ssPay) return {card:"ss",head:"삼성카드로, 네이버페이 결제",reason:"현대·MG 한도가 찼어요. 삼성 간편결제 3%예요.",note:""};
+    return {card:"hd",head:"현대카드로",reason:"모든 한도가 찼어요. 현대 1% 적립이라도 받아요.",note:""};
+  case "easypay":
+    if(!c.mgLimit) return {card:"mg",head:"MG+ S로",reason:"카카오페이·네이버페이·토스페이 온라인 결제, 1만원 이상 10%예요.",note:""};
+    if(!c.ssPay) return {card:"ss",head:"삼성카드로",reason:"MG 한도가 찼어요. 카카오페이·네이버페이는 삼성 3%예요.",note:"토스페이는 삼성 3% 대상이 아니에요."};
+    return {card:"hd",head:"현대카드로",reason:"한도가 다 찼어요. 현대 1% 적립이라도 받아요.",note:""};
+  case "offline":{
+    const miss=[];if(!c.ssPerf)miss.push("삼성");if(!c.mgPerf)miss.push("MG+ S");if(!c.hdPerf)miss.push("현대");
+    const late=new Date().getDate()>=20;
+    return {card:"mom",head:"엄마카드로",reason:"지금처럼 주유와 오프라인 결제에 써요.",note:late&&miss.length?("20일이 지났는데 "+miss.join(", ")+" 실적 체크가 아직이에요. 모자라면 일부는 그 카드로 내요."):"내 카드 실적이 모자란 달에는 일부를 그 카드로 내요."};}
+  case "sub":
+    if(!c.mgLimit) return {card:"mg",head:"MG+ S로",reason:"넷플릭스·유튜브·티빙·쿠팡와우 등 월 정기결제 50%예요.",note:"앱스토어·인앱 결제는 할인에서 빠져요. 네이버플러스 멤버십은 현대카드로 내면 무료예요."};
+    return {card:"ss",head:"삼성카드로",reason:"MG 한도가 찼어요. 넷플릭스·웨이브·티빙·멜론 등은 삼성 10%예요.",note:"네이버플러스 멤버십은 현대카드로 내면 무료예요."};
+  case "phone": return {card:"ss",head:"삼성카드로",reason:"휴대폰 요금 정기결제 10%예요.",note:"매달 2,640원 할인 확인됨"};
+  case "etc":
+    if(!c.mgPerf) return {card:"mg",head:"MG+ S로",reason:"어디에도 안 맞는 결제는 MG+ S로 모아 실적 30만원을 채워요.",note:"MG+ S는 할인받은 금액도 실적에 들어가요. 관리비는 빠져요."};
+    if(!c.ssPerf) return {card:"ss",head:"삼성카드로",reason:"MG+ S 실적은 채웠어요. 아직 못 채운 삼성으로 내요.",note:"할인받은 금액은 삼성 실적에서 빠져서, 이런 일반 결제가 실적을 채워줘요."};
+    if(!c.hdPerf) return {card:"hd",head:"현대카드로",reason:"MG+ S·삼성 실적은 채웠어요. 아직 못 채운 현대로 내요.",note:"1% 적립도 같이 받아요."};
+    return {card:"mg",head:"MG+ S로",reason:"세 카드 실적을 다 채웠어요. 기본 카드인 MG+ S로 내요.",note:"실적이 60만원을 넘으면 다음 달 MG+ S 한도가 3만원으로 늘어요."};
+  case "bill": return {card:"mg",head:"MG+ S로 그대로",reason:"관리비는 어느 카드든 혜택·실적이 없어요.",note:""};
+  case "game": return {card:"gift",head:"기프트카드로만",reason:"매달 10만원어치 충전한 금액 안에서만 써요.",note:"애플 ID와 네이버페이에 신용카드를 연결하지 않아요."};
+  case "install": return {card:"ss",head:"삼성카드로",reason:"무이자 할부도 승인한 달 실적에 전액 잡혀요.",note:"할부 잔액이 160만원을 넘으면 새 할부는 보류해요."};
+  case "welfare": return {card:"ss",head:"삼성카드로",reason:"복지금부터 먼저 다 써요.",note:"원래 사던 것에 쓸 때 이득이에요."};
+  }
+}
+
+/* ---------- render: pay ---------- */
+let sel=null;
+function renderPay(){
+  const n=MONTHLY.filter(m=>C()[m.k]).length;
+  document.getElementById("topSub").textContent=(new Date().getMonth()+1)+"월 체크 "+n+"/"+MONTHLY.length+". 카드를 누르면 혜택을 볼 수 있어요.";
+  const w=document.getElementById("wallet");w.textContent="";
+  ["hd","mg","ss"].forEach(k=>{const b=cardEl(k,"button");b.type="button";b.setAttribute("aria-label",CARD[k].short+" 혜택 보기");b.onclick=()=>openBox(k);w.append(b);});
+  const t=document.getElementById("tiles");t.textContent="";
+  TILES.forEach(([k,l])=>{const b=el("button","tile",l);b.type="button";b.setAttribute("aria-pressed",k===sel);b.onclick=()=>pick(k===sel?null:k);t.append(b);});
+  const r=document.getElementById("result"),top=document.getElementById("top");
+  if(!sel){r.hidden=true;top.hidden=false;return;}
+  const d=decide(sel);r.textContent="";r.hidden=false;top.hidden=true;
+  r.append(el("p","sub",TILES.find(x=>x[0]===sel)[1]+"에서 결제할 때"));
+  r.append(cardEl(d.card));
+  const a=el("div","answer"+(d.stop?" stop":""));a.append(el("p","head",d.head));a.append(el("p","reason",d.reason));if(d.note)a.append(el("p","note",d.note));r.append(a);
+  const back=el("button","back","다른 결제처 고르기");back.type="button";back.onclick=()=>pick(null);r.append(back);
+}
+function pick(k){sel=k;renderPay();window.scrollTo({top:0,behavior:"smooth"});}
+
+/* ---------- render: month ---------- */
+function renderMonth(){
+  rollover();
+  document.getElementById("mTitle").textContent=(new Date().getMonth()+1)+"월 체크";
+  const box=document.getElementById("mchecks");box.textContent="";let done=0;
+  MONTHLY.forEach(m=>{
+    const on=!!C()[m.k];if(on)done++;
+    const lab=el("label","todo"+(on?" done":""));
+    const cb=document.createElement("input");cb.type="checkbox";cb.checked=on;cb.id="m-"+m.k;
+    cb.onchange=()=>{st.month.checks[m.k]=cb.checked;save();renderMonth();renderPay();};
+    const g=el("div","grow");g.append(el("span","t",m.t));g.append(el("p","meta",m.sub));
+    lab.append(cb);lab.append(g);if(m.card)lab.append(chip(m.card));box.append(lab);
+  });
+  document.getElementById("mCount").textContent=MONTHLY.length+"개 중 "+done+"개 완료";
+  const r=document.getElementById("routine");r.textContent="";
+  ROUTINE.forEach(([w,t])=>{const d=el("div","when");d.append(el("b",null,w));d.append(el("span",null,t));r.append(d);});
+  const tb=document.getElementById("todos");tb.textContent="";let td=0;
+  TODOS.forEach(([k,t])=>{
+    const on=!!st.todos[k];if(on)td++;
+    const lab=el("label","todo"+(on?" done":""));
+    const cb=document.createElement("input");cb.type="checkbox";cb.checked=on;cb.id="t-"+k;
+    cb.onchange=()=>{st.todos[k]=cb.checked;save();renderMonth();};
+    lab.append(cb);lab.append(el("span","t",t));tb.append(lab);
+  });
+  document.getElementById("todoCount").textContent=TODOS.length+"개 중 "+td+"개 완료";
+}
+
+/* ---------- render: cards ---------- */
+function renderCards(){
+  const b=document.getElementById("boxes");b.textContent="";
+  BOXES.forEach(x=>{
+    const d=el("div","box");d.id="box-"+x.k;d.append(cardEl(x.k));
+    d.append(el("p","val",x.v));
+    const dl=el("dl");x.dl.forEach(([a,c])=>{dl.append(el("dt",null,a));dl.append(el("dd",null,c));});d.append(dl);
+    const ul=el("ul");x.li.forEach(t=>ul.append(el("li",null,t)));d.append(ul);b.append(d);
+  });
+  const g=document.getElementById("guide");g.textContent="";
+  GUIDE.forEach(([w,k,why])=>{const it=el("div","item");const gr=el("div","grow");gr.append(el("p","what",w));gr.append(el("p","why",why));it.append(gr);it.append(chip(k));g.append(it);});
+}
+function openBox(k){go("cards");const e=document.getElementById("box-"+k);if(e)e.scrollIntoView({behavior:"smooth",block:"start"});}
+
+/* ---------- reset (두 번 눌러 확인) ---------- */
+const resetBtn=document.getElementById("resetBtn");let armT=null;
+resetBtn.onclick=()=>{
+  if(!resetBtn.classList.contains("arm")){resetBtn.classList.add("arm");resetBtn.textContent="한 번 더 누르면 지워요";clearTimeout(armT);armT=setTimeout(disarm,3000);return;}
+  disarm();st.month={key:curKey(),checks:{}};save();renderMonth();renderPay();
+};
+function disarm(){resetBtn.classList.remove("arm");resetBtn.textContent="초기화";}
+
+/* ---------- backup ---------- */
+const bmsg=document.getElementById("bmsg"),codeEl=document.getElementById("code");
+function msg(t,bad){bmsg.textContent=t;bmsg.className="msg"+(bad?" bad":"");}
+function makeCode(){return "JCW1."+btoa(unescape(encodeURIComponent(JSON.stringify({v:1,at:new Date().toISOString().slice(0,10),todos:st.todos,month:st.month,theme:st.theme}))));}
+document.getElementById("copyBtn").onclick=async()=>{
+  const code=makeCode();codeEl.value=code;
+  try{await navigator.clipboard.writeText(code);msg("복사했어요. 메모 앱에 붙여두세요.");}
+  catch(e){codeEl.focus();codeEl.select();msg("아래 칸의 코드를 길게 눌러 복사하세요.");}
+};
+document.getElementById("restoreBtn").onclick=()=>{
+  const raw=codeEl.value.trim();
+  if(!raw){msg("먼저 백업 코드를 붙여넣어 주세요.",1);return;}
+  try{
+    if(!raw.startsWith("JCW1."))throw 0;
+    const o=JSON.parse(decodeURIComponent(escape(atob(raw.slice(5)))));
+    st=normalize(o);rollover();save();applyTheme();renderAll();
+    msg("복원했어요"+(o.at?" ("+o.at+" 백업)":"")+". 지난달 백업이면 이번 달 체크는 비워져요.");
+  }catch(e){msg("코드를 읽지 못했어요. 처음부터 끝까지 빠짐없이 붙여넣었는지 확인해 주세요.",1);}
+};
+
+/* ---------- theme/nav ---------- */
+function applyTheme(){
+  const r=document.documentElement;
+  if(st.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",st.theme);
+  document.getElementById("themeBtn").textContent="화면 밝기: "+({auto:"자동",light:"밝게",dark:"어둡게"})[st.theme||"auto"];
+}
+document.getElementById("themeBtn").onclick=()=>{st.theme=({auto:"light",light:"dark",dark:"auto"})[st.theme||"auto"];save();applyTheme();};
+function go(v){
+  document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id===v));
+  document.querySelectorAll("nav button").forEach(b=>{if(b.dataset.v===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{if(b.dataset.v==="pay"&&sel)pick(null);go(b.dataset.v);});
+function renderAll(){renderPay();renderMonth();renderCards();}
+
+/* 앱을 다시 열었을 때 달이 바뀌었으면 자동 초기화 */
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){const k=st.month.key;rollover();if(k!==st.month.key)renderAll();}});
+
+const standalone=window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;
+document.getElementById("ver").textContent="버전 "+APP_VERSION+" · "+(standalone?"홈 화면 앱으로 실행 중":"브라우저에서 보는 중")+" · 체크는 이 기기에만 저장";
+
+const h=(location.hash||"").slice(1);
+rollover();applyTheme();renderAll();
+if(["pay","month","cards"].includes(h))go(h);
+
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});}
+</script>
+</body>
+</html>
